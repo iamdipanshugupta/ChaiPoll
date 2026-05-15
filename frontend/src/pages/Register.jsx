@@ -33,7 +33,7 @@ const Register = () => {
               <label className="cp-label">Full name</label>
               <input
                 className="cp-input"
-                placeholder="Rahul Sharma"
+                placeholder="Enter Your Full Name"
                 {...register("name", { required: true })}
               />
             </div>
