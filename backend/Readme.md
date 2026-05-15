@@ -113,7 +113,7 @@ backend/
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/your-username/chaipoll.git
+git clone https://github.com/iamdipanshugupta/ChaiPoll.git
 cd chaipoll/backend
 
 # 2. Install dependencies
