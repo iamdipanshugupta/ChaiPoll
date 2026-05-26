@@ -1,10 +1,18 @@
-const errorHandler = (err, req, res, next) => {
+import { validationResult } from "express-validator"
 
-  console.log(err.stack)
+const validate = (req, res, next) => {
 
-  res.status(500).json({
-    message: err.message || "Server Error"
-  })
+  const errors = validationResult(req)
+
+  if (!errors.isEmpty()) {
+
+    return res.status(400).json({
+      success: false,
+      errors: errors.array()
+    })
+  }
+
+  next()
 }
 
-export default errorHandler
+export default validate

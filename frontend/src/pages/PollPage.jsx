@@ -4,7 +4,7 @@ import API from "../api/axios";
 import toast from "react-hot-toast";
 import { AuthContext } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
-import socket from "../socket/socket.js"
+import {socket} from "../socket/socket.js"
 const PollPage = () => {
   const { code } = useParams();
   const { user } = useContext(AuthContext);

@@ -1,5 +1,10 @@
 import { io } from "socket.io-client"
 
-const socket = io(import.meta.env.VITE_BACKEND_URL || "http://localhost:5000");
+const URL = import.meta.env.VITE_SOCKET_URL;
 
-export default socket
+
+
+export const  socket = io(URL ,{
+  transports:["websocket" ,"polling"],
+  withCredentials:true
+})
