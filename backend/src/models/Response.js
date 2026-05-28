@@ -6,7 +6,6 @@ const answerSchema = new mongoose.Schema({
         required: true
     },
 
-    // FIX: "selectedOption" — capital O, frontend se bhi yahi aata hai
     selectedOption: {
         type: String,
         required: true
