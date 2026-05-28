@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 
 // Lightweight QR using qrcode.react via CDN-style dynamic import workaround

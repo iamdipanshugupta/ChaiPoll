@@ -1,73 +1,117 @@
 import nodemailer from "nodemailer";
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS, // Gmail App Password (16 chars)
-  },
-});
+// ── Create transporter lazily (function ke andar) ─────────────
+// Module level pe banana dangerous hai — env variables load nahi hote
+const createTransporter = () => {
+  // Validate required env vars
+  const required = ["SMTP_USER", "SMTP_PASS", "SMTP_FROM_EMAIL"];
+  for (const key of required) {
+    if (!process.env[key]) {
+      throw new Error(`Missing env variable: ${key}`);
+    }
+  }
 
-// Send verification email
-const sendVerificationEmail = async (email, name, token) => {
+  return nodemailer.createTransport({
+    service:"gmail",
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+    // Connection timeout
+    connectionTimeout: 10000,
+    greetingTimeout: 5000,
+  });
+};
+
+// ── Send Verification Email ────────────────────────────────────
+const sendVerificationEmail = async (to, name, token) => {
   const verifyURL = `${process.env.BACKEND_URL}/api/auth/verify-email/${token}`;
 
-  const mailOptions = {
-    from: `"☕ ChaiPoll" <${process.env.EMAIL_USER}>`,
-    to: email,
-    subject: "Verify your ChaiPoll account",
-    html: `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      </head>
-      <body style="margin:0;padding:0;background:#0d0d0d;font-family:'Segoe UI',sans-serif;">
-        <div style="max-width:520px;margin:40px auto;background:#181818;border-radius:20px;border:1px solid rgba(249,115,22,0.15);overflow:hidden;">
-          
-          <!-- Header -->
-          <div style="background:linear-gradient(135deg,#f97316,#ea580c);padding:32px;text-align:center;">
-            <div style="font-size:36px;margin-bottom:8px;">☕</div>
-            <div style="font-size:24px;font-weight:800;color:#fff;letter-spacing:-0.5px;">ChaiPoll</div>
-            <div style="font-size:13px;color:rgba(255,255,255,0.8);margin-top:4px;">Real-time polling platform</div>
-          </div>
+  console.log("📧 Sending verification email to:", to);
+  console.log("🔗 Verify URL:", verifyURL);
 
-          <!-- Body -->
-          <div style="padding:32px;">
-            <h2 style="color:#f5f5f5;font-size:20px;margin:0 0 12px;">Hey ${name}! 👋</h2>
-            <p style="color:#a3a3a3;font-size:14px;line-height:1.6;margin:0 0 24px;">
-              Thanks for signing up for ChaiPoll. Please verify your email address to activate your account and start creating polls.
-            </p>
-            
-            <div style="text-align:center;margin:28px 0;">
-              <a href="${verifyURL}" 
-                 style="display:inline-block;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;padding:14px 32px;border-radius:12px;text-decoration:none;font-weight:700;font-size:15px;letter-spacing:0.3px;">
-                ✅ Verify Email Address
-              </a>
-            </div>
+  const transporter = createTransporter();
 
-            <p style="color:#737373;font-size:12px;line-height:1.6;margin:0 0 8px;">
-              This link expires in <strong style="color:#f97316;">24 hours</strong>. If you didn't create a ChaiPoll account, you can safely ignore this email.
-            </p>
+  // Test SMTP connection first
+  await transporter.verify();
+  console.log("✅ SMTP connection verified");
 
-            <div style="margin-top:20px;padding:12px 16px;background:#111;border-radius:8px;border:1px solid rgba(255,255,255,0.06);">
-              <p style="color:#737373;font-size:11px;margin:0 0 4px;">Or copy this link:</p>
-              <p style="color:#f97316;font-size:11px;margin:0;word-break:break-all;font-family:monospace;">${verifyURL}</p>
-            </div>
-          </div>
+  const info = await transporter.sendMail({
+    from: `"☕ ChaiPoll" <${process.env.SMTP_FROM_EMAIL}>`,
+    to,
+    subject: "Verify your ChaiPoll account ☕",
+    html: getEmailHTML(name, verifyURL),
+  });
 
-          <!-- Footer -->
-          <div style="padding:20px 32px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
-            <p style="color:#525252;font-size:11px;margin:0;">☕ Made with ❤️ · ChaiPoll</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `,
-  };
-
-  await transporter.sendMail(mailOptions);
+  console.log("✅ Email sent! Message ID:", info.messageId);
+  return info;
 };
+
+// ── HTML Template ──────────────────────────────────────────────
+const getEmailHTML = (name, verifyURL) => `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:'Segoe UI',Arial,sans-serif;">
+  <div style="max-width:520px;margin:40px auto;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,#f97316,#ea580c);padding:36px 32px;text-align:center;">
+      <div style="font-size:40px;margin-bottom:10px;">☕</div>
+      <div style="font-size:26px;font-weight:800;color:#fff;letter-spacing:-0.5px;">ChaiPoll</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.85);margin-top:5px;">Real-time polling platform</div>
+    </div>
+
+    <!-- Body -->
+    <div style="padding:36px 32px;">
+      <h2 style="color:#111827;font-size:20px;margin:0 0 14px;font-weight:700;">
+        Hey ${name}! 👋
+      </h2>
+      <p style="color:#6b7280;font-size:15px;line-height:1.7;margin:0 0 28px;">
+        Thanks for signing up for <strong style="color:#f97316;">ChaiPoll</strong>.
+        Click the button below to verify your email address and activate your account.
+      </p>
+
+      <!-- CTA Button -->
+      <div style="text-align:center;margin:32px 0;">
+        <a href="${verifyURL}"
+           style="display:inline-block;background:linear-gradient(135deg,#f97316,#ea580c);color:#ffffff;padding:15px 36px;border-radius:12px;text-decoration:none;font-weight:700;font-size:15px;letter-spacing:0.3px;box-shadow:0 4px 16px rgba(249,115,22,0.35);">
+          ✅ Verify Email Address
+        </a>
+      </div>
+
+      <!-- Expiry note -->
+      <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:14px 16px;margin-bottom:24px;">
+        <p style="color:#c2410c;font-size:13px;margin:0;">
+          ⏱ This link expires in <strong>24 hours</strong>.
+          If you didn't create an account, you can safely ignore this email.
+        </p>
+      </div>
+
+      <!-- Fallback link -->
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;">
+        <p style="color:#9ca3af;font-size:11px;margin:0 0 6px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">
+          Or copy this link in your browser:
+        </p>
+        <p style="color:#f97316;font-size:11px;margin:0;word-break:break-all;font-family:monospace;">
+          ${verifyURL}
+        </p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:20px 32px;background:#f9fafb;border-top:1px solid #f3f4f6;text-align:center;">
+      <p style="color:#9ca3af;font-size:12px;margin:0;">
+        ☕ Made with ❤️ &nbsp;·&nbsp;
+        <a href="https://chai-poll-nine.vercel.app" style="color:#f97316;text-decoration:none;">ChaiPoll</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+`;
 
 export { sendVerificationEmail };

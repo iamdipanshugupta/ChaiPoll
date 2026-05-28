@@ -1,6 +1,6 @@
 import { useContext, useState } from "react";
-import { AuthContext } from "../context/AuthContext.jsx";
-import { useTheme } from "../context/Themecontext.jsx";
+import { AuthContext } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 
 const Navbar = () => {

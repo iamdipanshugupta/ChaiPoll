@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import API from "../api/axios";
-import {socket} from "../socket/socket.js";
+import socket from "../socket/socket.js";
 import Navbar from "../components/Navbar";
 import toast from "react-hot-toast";
 import QRShare from "../components/QRShare";
-import PollStatusBadge from "../components/PollStatusBadge.jsx";
-import CountdownTimer from "../components/Countdowntimer.jsx";
+import PollStatusBadge from "../components/PollStatusBadge";
+import CountdownTimer from "../components/CountdownTimer";
 import exportAnalyticsPDF from "../utils/exportPDF.js";
 
 const Analytics = () => {

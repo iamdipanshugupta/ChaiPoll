@@ -1,10 +1,8 @@
-import { io } from "socket.io-client"
+import { io } from "socket.io-client";
 
-const URL = import.meta.env.VITE_SOCKET_URL;
+const socket = io(
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:5000",
+  { autoConnect: true, reconnection: true, reconnectionDelay: 1000 }
+);
 
-
-
-export const  socket = io(URL ,{
-  transports:["websocket" ,"polling"],
-  withCredentials:true
-})
+export default socket;

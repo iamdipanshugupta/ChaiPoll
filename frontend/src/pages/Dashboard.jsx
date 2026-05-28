@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import PollStatusBadge from "../components/PollStatusBadge";
 import QRShare from "../components/QRShare";
-import CountdownTimer from "../components/Countdowntimer";
+import CountdownTimer from "../components/CountdownTimer";
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
