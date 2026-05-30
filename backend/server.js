@@ -19,9 +19,12 @@ const allowedOrigins = [
 
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+     origin: [
+      "http://localhost:5173",
+      "https://chai-poll-sigma.vercel.app"
+    ],
     credentials: true,
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   },
 });
 
