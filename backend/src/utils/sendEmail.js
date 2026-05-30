@@ -6,7 +6,9 @@ const createTransporter = () => {
     throw new Error("Missing SMTP_USER or SMTP_PASS in .env");
   }
   return nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
