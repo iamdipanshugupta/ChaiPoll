@@ -226,7 +226,7 @@ const forgotPassword = async (req, res) => {
 
 
 
-const verifyOTP = async  (res, req) => {
+const verifyOTP = async  (req, res) => {
   try {
     const { email, otp } = req.body;
 
