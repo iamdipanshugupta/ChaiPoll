@@ -98,6 +98,9 @@ const Login = () => {
                 {...register("password", { required: true })} />
             </div>
 
+            <div className="flex justify-end mb-1">
+              <Link to="/forgot-password" className="text-xs font-medium transition" style={{ color: "#fb923c" }}>Forgot password?</Link>
+            </div>
             <button type="submit" disabled={isSubmitting} className="btn btn-primary w-full" style={{ padding: "12px" }}>
               {isSubmitting ? (
                 <span className="flex items-center gap-2 justify-center">

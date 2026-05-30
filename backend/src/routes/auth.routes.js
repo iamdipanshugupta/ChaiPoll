@@ -1,9 +1,12 @@
 import express from "express";
 import {
+   forgotPassword,
    loginUser,
    registerUser,
    resendVerification,
-   verifyEmail
+   resetPassword,
+   verifyEmail,
+   verifyOTP
 }
    from "../controllers/auth.controller.js"
 import { registerValidation, loginValidation } from "../validations/auth.validation.js"
@@ -15,9 +18,16 @@ const router = express.Router();
 router.post("/register", registerValidation, validate, registerUser);
 
 // Login Route
-router.post("/login", loginValidation, validate,loginUser);
+router.post("/login", loginValidation, validate, loginUser);
 
-router.get("/verify-email/:token" , verifyEmail);
+
+// Email verification
+
+router.get("/verify-email/:token", verifyEmail);
 router.post("/resend-verification", resendVerification);
 
+// Password Reset
+router.post("/forgot-password", forgotPassword);
+router.post("/verify-otp", verifyOTP);
+router.post("/reset-password", resetPassword)
 export default router;

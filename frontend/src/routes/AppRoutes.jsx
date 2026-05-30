@@ -8,6 +8,9 @@ import PollPage from "../pages/PollPage";
 import Analytics from "../pages/Analytics";
 import PublicResults from "../pages/PublicResults";
 import NotFound from "../pages/NotFound";
+import ForgotPassword from "../pages/Forgotpassword";
+import VerifyOTP from "../pages/Verifyotp";
+import ResetPassword from "../pages/Resetpassword";
 import ProtectedRoute from "../components/ProtectedRoute";
 
 const AppRoutes = () => (
@@ -15,6 +18,10 @@ const AppRoutes = () => (
     <Route path="/" element={<Home />} />
     <Route path="/login" element={<Login />} />
     <Route path="/register" element={<Register />} />
+
+    <Route path="/forgot-password" element={<ForgotPassword />} />
+    <Route path="/verify-otp"      element={<VerifyOTP />} />
+    <Route path="/reset-password"  element={<ResetPassword />} />
 
     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
     <Route path="/create-poll" element={<ProtectedRoute><CreatePoll /></ProtectedRoute>} />

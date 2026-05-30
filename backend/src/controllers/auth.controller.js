@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import User from "../models/User.js";
 import generateToken from "../utils/generateToken.js";
-import { sendVerificationEmail } from "../utils/sendEmail.js";
+import { sendVerificationEmail , sendOTPEmail } from "../utils/sendEmail.js";
 
 // ── REGISTER ──────────────────────────────────────────────────
 const registerUser = async (req, res) => {
@@ -179,4 +179,134 @@ const loginUser = async (req, res) => {
   }
 };
 
-export { registerUser, loginUser, verifyEmail, resendVerification };
+
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email)
+      return res.status(400).json({ message: "Email is required" });
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user) {
+      return res.status(200).json({
+        message: "If this email is registered , an otp has been sent",
+      });
+    }
+
+    if (!user.isVerified) {
+      return res.status(400).json({
+        message: "Plese verify your email first before resetting password"
+      });
+    }
+
+    // Generate 6 digit otp
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    user.resetOtp = otp;
+    user.resetOtpExpires = otpExpires;
+    user.resetOtpVerified = false;
+    await user.save();
+
+    // send otp email
+    await sendOTPEmail(user.email, user.name, otp);
+    console.log("OTP sent to:", user.email);
+
+    res.status(200).json({
+      message: "OTP sent to your email address. Valid for 10 minutes.",
+    });
+
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res.status(500).json({ message: error.message || "Internal server error" });
+  }
+}
+
+
+
+const verifyOTP = async  (res, req) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp)
+      return res.status(400).json({ message: "Email and OTP are required" });
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user)
+      return res.status(404).json({ message: "No account found this with email" });
+
+    // check otp existes
+    if (!user.resetOtp || !user.resetOtpExpires)
+      return res.status(400).json({ message: "No OTP request found . plese request a new one" })
+
+    if (new Date(user.resetOtpExpires) < new Date()) {
+      user.resetOtp = null;
+      user.resetOtpExpires = null;
+      user.resetOtpVerified = false;
+      await user.save();
+      return res.status(400).json({ message: "OTP has expired . Plese request a new one" })
+    }
+
+    // Check otp match
+    if (user.resetOtp !== otp.toString())
+      return res.status(400).json({ message: "Invalid OTP. Plesetry again" })
+
+    // otp correct - mark as verified
+    user.resetOtpVerified = true;
+    await user.save();
+    res.status(200).json({ message: "OTP verified successfully! You can now reset your password." });
+  } catch (error) {
+    console.error("Verify OTP error:", error);
+    res.status(500).json({ message: error.message || "Internal server error" });
+  }
+}
+
+
+const resetPassword = async (req, res) => {
+
+  try {
+    const { email, password, confirmPassword } = req.body;
+
+    if (!email || !password || !confirmPassword)
+      return res.status(400).json({ message: "All fields are rewuired" });
+
+    if (newPassword !== confirmPassword)
+      return res.status(400).json({ message: "paswords are do not match" })
+    if (newPassword.length < 6)
+      return res.status(400).json({ message: "Password must be at least 6 charcters" });
+
+    const user = await User.findOne({ email: email.toLowerCase() })
+
+    if (!user)
+      return res.status(404).json({ message: "No account found this with email" })
+
+    // Must have verified otp first
+    if (!user.resetOtpVerified)
+      return res.status(400).json({ message: "Plese verify otp first before resetting password" });
+
+    // check didn't expire between verification and reset
+    if (!user.resetOtpExpires || new Date(user.resetOtpExpires) < new Date())
+      return res.status(400).json({ message: "Session expires . Plese start over." })
+
+    // hash New password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    user.password = hashedPassword;
+    user.resetOtp = null;
+    user.resetOtpExpires = null;
+    user.resetOtpVerified = false;
+    await user.save();
+
+    console.log("Password reset for:", user.email)
+    res.status(200).json({ message: "Password reset successfully! You can now sign in." });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    res.status(500).json({ message: error.message || "Internal server error" });
+  }
+}
+
+
+export { registerUser, loginUser, verifyEmail, resendVerification , forgotPassword,verifyOTP,resetPassword};
