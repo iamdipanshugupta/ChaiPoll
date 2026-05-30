@@ -13,7 +13,7 @@ const server = http.createServer(app);
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://chai-poll-nine.vercel.app",
+  "https://chai-poll-sigma.vercel.app",
   process.env.CLIENT_URL,
 ].filter(Boolean);
 
