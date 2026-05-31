@@ -268,9 +268,9 @@ const verifyOTP = async  (req, res) => {
 const resetPassword = async (req, res) => {
 
   try {
-    const { email, password, confirmPassword } = req.body;
+    const { email, newPassword, confirmPassword } = req.body;
 
-    if (!email || !password || !confirmPassword)
+    if (!email || !newPassword || !confirmPassword)
       return res.status(400).json({ message: "All fields are rewuired" });
 
     if (newPassword !== confirmPassword)
