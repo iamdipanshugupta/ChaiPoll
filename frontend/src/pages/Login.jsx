@@ -15,14 +15,13 @@ const Login = () => {
   const [unverifiedEmail, setUnverifiedEmail] = useState("");
   const [resending, setResending] = useState(false);
 
-  // Handle redirect from email verification link
+  // Email verification redirect handle
   useEffect(() => {
     const verified = searchParams.get("verified");
-    if (verified === "true") {
-      toast.success("✅ Email verified! You can now sign in.");
-    } else if (verified === "false") {
-      toast.error("❌ Verification link expired or invalid. Try resending.");
-    }
+    const error = searchParams.get("error");
+    if (verified === "true") toast.success("✅ Email verified! You can now sign in.");
+    else if (verified === "false") toast.error("❌ Verification link expired. Try resending.");
+    else if (error === "google_failed") toast.error("Google login failed. Please try again.");
   }, []);
 
   const onSubmit = async (data) => {
@@ -56,6 +55,11 @@ const Login = () => {
     }
   };
 
+  // Google OAuth — backend pe redirect karo
+  const handleGoogleLogin = () => {
+    window.location.href = `${import.meta.env.VITE_BACKEND_URL}/api/auth/google`;
+  };
+
   return (
     <div className="page-gradient min-h-screen">
       <Navbar />
@@ -64,21 +68,53 @@ const Login = () => {
 
           <div className="text-center mb-8">
             <div className="cp-logo text-3xl mb-2">☕ ChaiPoll</div>
-            <p className="text-sm" style={{ color: "var(--text3)" }}>Welcome back — sign in to continue</p>
+            <p className="text-sm" style={{ color: "var(--text3)" }}>
+              Welcome back — sign in to continue
+            </p>
           </div>
+
+          {/* Google OAuth Button */}
+          <button
+            onClick={handleGoogleLogin}
+            className="w-full flex items-center justify-center gap-3 py-3 rounded-xl font-semibold text-sm transition-all duration-200 mb-5"
+            style={{
+              background: "var(--bg3)",
+              border: "1px solid var(--border)",
+              color: "var(--text)",
+            }}
+            onMouseOver={(e) => e.currentTarget.style.borderColor = "rgba(249,115,22,0.4)"}
+            onMouseOut={(e) => e.currentTarget.style.borderColor = "var(--border)"}
+          >
+            {/* Google SVG Icon */}
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.055 0 12 0 7.27 0 3.198 2.698 1.24 6.65l4.026 3.115z"/>
+              <path fill="#34A853" d="M16.04 18.013c-1.09.703-2.474 1.078-4.04 1.078a7.077 7.077 0 01-6.723-4.823l-4.04 3.067A11.965 11.965 0 0012 24c2.933 0 5.735-1.043 7.834-3l-3.793-2.987z"/>
+              <path fill="#4A90E2" d="M19.834 21c2.195-2.048 3.62-5.096 3.62-9 0-.71-.109-1.473-.272-2.182H12v4.637h6.436c-.317 1.559-1.17 2.766-2.395 3.558L19.834 21z"/>
+              <path fill="#FBBC05" d="M5.277 14.268A7.12 7.12 0 014.909 12c0-.782.125-1.533.357-2.235L1.24 6.65A11.934 11.934 0 000 12c0 1.92.445 3.73 1.237 5.335l4.04-3.067z"/>
+            </svg>
+            Continue with Google
+          </button>
+
+          <div className="cp-divider">or sign in with email</div>
 
           {/* Email not verified banner */}
           {needsVerification && (
-            <div className="rounded-xl p-4 mb-6" style={{ background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.25)" }}>
+            <div className="rounded-xl p-4 mb-5"
+              style={{ background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.25)" }}>
               <div className="flex items-start gap-3">
                 <span className="text-xl">📧</span>
                 <div>
-                  <p className="text-sm font-semibold mb-1" style={{ color: "#fb923c" }}>Email not verified</p>
-                  <p className="text-xs mb-3" style={{ color: "var(--text2)" }}>
-                    We sent a verification link to <strong>{unverifiedEmail}</strong>. Please check your inbox and click the link.
+                  <p className="text-sm font-semibold mb-1" style={{ color: "#fb923c" }}>
+                    Email not verified
                   </p>
-                  <button onClick={resendVerification} disabled={resending}
-                    className="btn btn-outline btn-sm text-xs">
+                  <p className="text-xs mb-3" style={{ color: "var(--text2)" }}>
+                    Check your inbox for <strong>{unverifiedEmail}</strong> and click the verification link.
+                  </p>
+                  <button
+                    onClick={resendVerification}
+                    disabled={resending}
+                    className="btn btn-outline btn-sm text-xs"
+                  >
                     {resending ? "Sending…" : "Resend verification email"}
                   </button>
                 </div>
@@ -89,19 +125,38 @@ const Login = () => {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div>
               <label className="cp-label">Email address</label>
-              <input type="email" className="cp-input" placeholder="you@example.com"
-                {...register("email", { required: true })} />
+              <input
+                type="email"
+                className="cp-input"
+                placeholder="you@example.com"
+                {...register("email", { required: true })}
+              />
             </div>
             <div>
               <label className="cp-label">Password</label>
-              <input type="password" className="cp-input" placeholder="••••••••"
-                {...register("password", { required: true })} />
+              <input
+                type="password"
+                className="cp-input"
+                placeholder="••••••••"
+                {...register("password", { required: true })}
+              />
+              <div className="flex justify-end mt-1.5">
+                <Link
+                  to="/forgot-password"
+                  className="text-xs font-medium"
+                  style={{ color: "#fb923c" }}
+                >
+                  Forgot password?
+                </Link>
+              </div>
             </div>
 
-            <div className="flex justify-end mb-1">
-              <Link to="/forgot-password" className="text-xs font-medium transition" style={{ color: "#fb923c" }}>Forgot password?</Link>
-            </div>
-            <button type="submit" disabled={isSubmitting} className="btn btn-primary w-full" style={{ padding: "12px" }}>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="btn btn-primary w-full"
+              style={{ padding: "12px" }}
+            >
               {isSubmitting ? (
                 <span className="flex items-center gap-2 justify-center">
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -111,27 +166,9 @@ const Login = () => {
             </button>
           </form>
 
-          <div className="cp-divider mt-6">or</div>
-
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { label: "GitHub", icon: <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg> },
-              { label: "Google", icon: <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0112 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.055 0 12 0 7.27 0 3.198 2.698 1.24 6.65l4.026 3.115z"/><path fill="#34A853" d="M16.04 18.013c-1.09.703-2.474 1.078-4.04 1.078a7.077 7.077 0 01-6.723-4.823l-4.04 3.067A11.965 11.965 0 0012 24c2.933 0 5.735-1.043 7.834-3l-3.793-2.987z"/><path fill="#4A90E2" d="M19.834 21c2.195-2.048 3.62-5.096 3.62-9 0-.71-.109-1.473-.272-2.182H12v4.637h6.436c-.317 1.559-1.17 2.766-2.395 3.558L19.834 21z"/><path fill="#FBBC05" d="M5.277 14.268A7.12 7.12 0 014.909 12c0-.782.125-1.533.357-2.235L1.24 6.65A11.934 11.934 0 000 12c0 1.92.445 3.73 1.237 5.335l4.04-3.067z"/></svg> },
-              { label: "Twitter", icon: <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> },
-            ].map((s) => (
-              <button key={s.label} type="button" title={s.label}
-                className="flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs transition-all"
-                style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text2)" }}
-                onClick={() => toast("OAuth coming soon!", { icon: "🔧" })}>
-                {s.icon}
-                <span className="hidden sm:inline" style={{ color: "var(--text2)" }}>{s.label}</span>
-              </button>
-            ))}
-          </div>
-
           <p className="text-center text-sm mt-6" style={{ color: "var(--text3)" }}>
             Don't have an account?{" "}
-            <Link to="/register" className="font-medium transition" style={{ color: "#fb923c" }}>
+            <Link to="/register" className="font-medium" style={{ color: "#fb923c" }}>
               Sign up free →
             </Link>
           </p>

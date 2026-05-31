@@ -1,8 +1,3 @@
-// ✅ Brevo (Sendinblue) HTTP API
-// - Free 300 emails/day
-// - Koi domain verify nahi chahiye
-// - HTTP API use karta hai — Render pe SMTP block nahi hota
-// - Node.js built-in fetch use karta hai — koi extra package nahi
 
 const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 

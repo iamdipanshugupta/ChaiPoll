@@ -2,6 +2,9 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import cors from "cors";
+import passport from "passport";
+import initPassPort from "./src/config/passport.js";
+
 
 import authroutes from "./src/routes/auth.routes.js";
 import pollroutes from "./src/routes/poll.routes.js";
@@ -35,6 +38,9 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 app.use(morgan("dev"));
+
+initPassPort();
+app.use(passport.initialize());
 
 // Health check
 app.get("/", (req, res) => {
