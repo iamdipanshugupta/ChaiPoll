@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import {  useSearchParams, Link } from "react-router-dom";
 import API from "../api/axios";
 import toast from "react-hot-toast";
 import Navbar from "../components/Navbar";
@@ -7,7 +7,6 @@ import Navbar from "../components/Navbar";
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
   const email = searchParams.get("email") || "";
-  const navigate = useNavigate();
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
