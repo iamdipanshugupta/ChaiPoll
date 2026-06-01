@@ -37,15 +37,17 @@ const submitResponse = async (req, res) => {
         }
 
         // Required Question validation
-        for (const question of poll.question) {
+        for (const question of poll.questions) {
             if (question.required) {
-                const answered = (answered || []).find(
+                const answered = (answers || []).find(
                     (a) => a.questionId === question._id.toString()
                 );
-                if (!answered)
+
+                if (!answered) {
                     return res.status(400).json({
                         message: `Question "${question.question}" is required`,
                     });
+                }
             }
         }
 
@@ -63,7 +65,7 @@ const submitResponse = async (req, res) => {
                 (o) => o.text === ans.selectedOption
             );
             if (!optionsExists)
-                return res.statu(400).json({ message: "Invalid options selected" })
+                return res.status(400).json({ message: "Invalid options selected" })
         }
 
         // save response
@@ -89,8 +91,10 @@ const submitResponse = async (req, res) => {
             responseId: response._id
         })
     } catch (error) {
-        res.status(500).json({ message: error.message });
-
+        console.error("SUBMIT RESPONSE ERROR:", error);
+        res.status(500).json({
+            message: error.message,
+        });
     }
 };
 
