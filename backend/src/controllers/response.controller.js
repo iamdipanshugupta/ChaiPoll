@@ -9,80 +9,88 @@ const submitResponse = async (req, res) => {
         const { code } = req.params;
         const { answers } = req.body;
 
-        // Find poll
         const poll = await Poll.findOne({ pollCode: code });
+        if (!poll) return res.status(404).json({ message: "poll not found" });
 
-        if (!poll) {
-            return res.status(404).json({ message: "Poll not found" });
-        }
-
-        // Expiry check
-        if (new Date(poll.expiresAt) < new Date()) {
+        // Expiry Check
+        if (new Date(poll.expiresAt) < new Date())
             return res.status(400).json({ message: "Poll has expired" });
-        }
 
-        // FIX: allowAnonymous (pehle allowAnyonymous typo tha model mein bhi)
-        // Authenticated poll mein user login hona chahiye
-        if (!poll.allowAnonymous && !req.user) {
-            return res.status(401).json({
-                message: "This poll requires you to be logged in"
+        // Auth mode check
+        if (!poll.allowAnonymous && !req.user)
+            return res.status(401).json({ message: "This poll required you to be logged in" });
+
+        // Duplicate Check - logged in user
+
+        if (req.user) {
+            const alreadyResponded = await Response.findOne({
+                poll: poll._id,
+                user: req.user._id,
             });
+
+            if (alreadyResponded) {
+                return res.status(400).json({
+                    message: "You have alraedy responded to this poll.",
+                    alreadySubmitted: true,
+                });
+            }
         }
 
-        // Required question validation
-        for (const question of poll.questions) {
+        // Required Question validation
+        for (const question of poll.question) {
             if (question.required) {
-                const answered = answers.find(
-                    ans => ans.questionId === question._id.toString()
+                const answered = (answered || []).find(
+                    (a) => a.questionId === question._id.toString()
                 );
-                if (!answered) {
+                if (!answered)
                     return res.status(400).json({
-                        message: `Question "${question.question}" is required`
+                        message: `Question "${question.question}" is required`,
                     });
-                }
             }
         }
 
-        // Validate that selected options actually exist in the question
-        for (const ans of answers) {
+        // Validations Options
+
+        for (const ans of answers || []) {
             const question = poll.questions.find(
-                q => q._id.toString() === ans.questionId
+                (q) => q._id.toString() === ans.questionId
             );
-            if (!question) {
+
+            if (!question)
                 return res.status(400).json({ message: "Invalid question ID" });
-            }
-            const optionExists = question.options.some(
-                opt => opt.text === ans.selectedOption
+
+            const optionsExists = question.options.some(
+                (o) => o.text === ans.selectedOption
             );
-            if (!optionExists) {
-                return res.status(400).json({ message: "Invalid option selected" });
-            }
+            if (!optionsExists)
+                return res.statu(400).json({ message: "Invalid options selected" })
         }
 
-        // Save response
-        // FIX: allowAnonymous spelling consistent rakha
+        // save response
+
         const response = await Response.create({
             poll: poll._id,
-            user: poll.allowAnonymous ? null : (req.user?._id || null),
+            user: poll.allowAnonymous ? null : req.user?._id || null,
             isAnonymous: poll.allowAnonymous,
-            answers  // selectedOption ab model se match karta hai
+            answers,
         });
 
-        // Socket emit — real-time update
-        const io = getIO();
-        io.to(code).emit("response_submitted", {
-            pollCode: code,
-            message: "New response submitted"
-        });
+        // Real time emit
+        try {
+            const io = getIO();
+            io.to(code).emit("response_submitted", {
+                pollCode: code,
+                message: "New Response submitted"
+            });
+        } catch (_) { }
 
         res.status(201).json({
             message: "Response submitted successfully",
             responseId: response._id
-        });
-
+        })
     } catch (error) {
-        console.log(error);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ message: error.message });
+
     }
 };
 
